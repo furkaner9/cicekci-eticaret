@@ -1,7 +1,38 @@
+"use client"
 import Link from 'next/link'
 import { Heart, Clock, Truck, Shield } from 'lucide-react'
+import ProductCard from '@/components/product/ProductCard'
+import { prisma } from '@/lib/prisma'
 
-export default function HomePage() {
+async function getFeaturedProducts() {
+  const products = await prisma.product.findMany({
+    where: {
+      featured: true
+    },
+    include: {
+      category: true
+    },
+    take: 8,
+    orderBy: {
+      createdAt: 'desc'
+    }
+  })
+  return products
+}
+
+async function getCategories() {
+  const categories = await prisma.category.findMany({
+    orderBy: {
+      name: 'asc'
+    }
+  })
+  return categories
+}
+
+export default async function HomePage() {
+  const featuredProducts = await getFeaturedProducts()
+  const categories = await getCategories()
+
   return (
     <div>
       {/* Hero Section */}
@@ -15,7 +46,7 @@ export default function HomePage() {
               Taptaze çiçekler, özenle hazırlanmış buketler ve hızlı teslimatla 
               özel anlarınızı unutulmaz kılın.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Link 
                 href="/urunler" 
                 className="bg-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-pink-700 transition"
@@ -72,29 +103,31 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Öne Çıkan Ürünler - Geçici */}
+      {/* Öne Çıkan Ürünler */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Öne Çıkan Ürünler</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition">
-                <div className="bg-gray-200 h-64 flex items-center justify-center">
-                  <span className="text-gray-400">Ürün Görseli</span>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold mb-2">Gül Buketi</h3>
-                  <p className="text-sm text-gray-600 mb-3">Kırmızı güller ile özel buket</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-pink-600">₺299</span>
-                    <button className="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-pink-700">
-                      Sepete Ekle
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="text-3xl font-bold">Öne Çıkan Ürünler</h2>
+            <Link 
+              href="/urunler" 
+              className="text-pink-600 hover:text-pink-700 font-semibold flex items-center gap-2"
+            >
+              Tümünü Gör
+              <span>→</span>
+            </Link>
           </div>
+          
+          {featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Henüz öne çıkan ürün bulunmamaktadır.</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -102,18 +135,40 @@ export default function HomePage() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Kategoriler</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-            {['Buketler', 'Aranjmanlar', 'Saksılı', 'Özel Günler', 'Kokulu'].map((category) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {categories.map((category) => (
               <Link 
-                key={category}
-                href={`/kategori/${category.toLowerCase()}`}
-                className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-xl transition"
+                key={category.id}
+                href={`/kategori/${category.slug}`}
+                className="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-xl transition hover:scale-105"
               >
                 <div className="text-4xl mb-3">🌺</div>
-                <h3 className="font-semibold">{category}</h3>
+                <h3 className="font-semibold">{category.name}</h3>
+                {category.description && (
+                  <p className="text-xs text-gray-500 mt-2">{category.description}</p>
+                )}
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-gradient-to-r from-pink-600 to-purple-600 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4">
+            Özel Gün İçin Çiçek Mi Arıyorsunuz?
+          </h2>
+          <p className="text-lg mb-8 max-w-2xl mx-auto">
+            Doğum günü, yıldönümü, sevgililer günü veya herhangi bir özel gün için 
+            size özel tasarımlar yapıyoruz.
+          </p>
+          <Link 
+            href="/iletisim" 
+            className="inline-block bg-white text-pink-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
+          >
+            Bizimle İletişime Geçin
+          </Link>
         </div>
       </section>
     </div>

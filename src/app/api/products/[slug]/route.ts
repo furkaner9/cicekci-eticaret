@@ -1,14 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+
+interface RouteContext {
+  params: Promise<{
+    slug: string
+  }>
+}
 
 // GET - Tek bir ürünü getir
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
+  request: Request,
+  context: RouteContext
 ) {
   try {
+    // Next.js 15: params artık Promise
+    const { slug } = await context.params
+    
     const product = await prisma.product.findUnique({
-      where: { slug: params.slug },
+      where: { slug },
       include: {
         category: true
       }
@@ -31,16 +40,17 @@ export async function GET(
   }
 }
 
-// PUT - Ürün güncelle (Admin)
+// PUT - Ürün güncelle
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
+  request: Request,
+  context: RouteContext
 ) {
   try {
+    const { slug } = await context.params
     const body = await request.json()
     
     const product = await prisma.product.update({
-      where: { slug: params.slug },
+      where: { slug },
       data: {
         name: body.name,
         description: body.description,
@@ -66,14 +76,16 @@ export async function PUT(
   }
 }
 
-// DELETE - Ürün sil (Admin)
+// DELETE - Ürün sil
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
+  request: Request,
+  context: RouteContext
 ) {
   try {
+    const { slug } = await context.params
+    
     await prisma.product.delete({
-      where: { slug: params.slug }
+      where: { slug }
     })
     
     return NextResponse.json({ message: 'Ürün silindi' })

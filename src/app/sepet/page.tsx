@@ -7,31 +7,39 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Minus, Plus, Trash2, ShoppingBag, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { toast } from 'sonner' // <-- Sonner import
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCartStore()
 
   const handleRemoveItem = (productId: string, productName: string) => {
     removeItem(productId)
-    toast.error(`${productName} sepetinizden çıkarıldı.`)
+    toast.error('Ürün Silindi', {
+      description: `${productName} sepetinizden çıkarıldı.`,
+    })
   }
 
   const handleClearCart = () => {
     clearCart()
-    toast.success("Sepetiniz temizlendi. Tüm ürünler sepetinizden çıkarıldı.")
+    toast.info('Sepet Temizlendi', {
+      description: 'Tüm ürünler sepetinizden çıkarıldı.',
+    })
   }
 
   const handleUpdateQuantity = (productId: string, newQuantity: number, stock: number) => {
     if (newQuantity > stock) {
-      toast.error(`Stok yetersiz. Maksimum ${stock} adet sipariş verebilirsiniz.`)
+      toast.error('Stok Yetersiz', {
+        description: `Maksimum ${stock} adet sipariş verebilirsiniz.`,
+      })
       return
     }
     updateQuantity(productId, newQuantity)
   }
 
+  // ... Geri kalan kod aynı kalacak
+  
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16">
@@ -188,7 +196,7 @@ export default function CartPage() {
               </div>
               {items.some(item => item.message) && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Mesaj Kartı</span>
+                    <span className="text-muted-foreground">Mesaj Kartı</span>
                   <span className="font-semibold text-green-600">Ücretsiz</span>
                 </div>
               )}
@@ -208,7 +216,7 @@ export default function CartPage() {
                 </div>
               </div>
             </CardContent>
-           <CardFooter className="flex flex-col gap-2">
+            <CardFooter className="flex flex-col gap-2">
               <Button className="w-full bg-pink-600 hover:bg-pink-700" size="lg" asChild>
                 <Link href="/odeme">
                   Ödeme Yap

@@ -1,39 +1,73 @@
 import { notFound } from 'next/navigation'
+import { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import ProductDetail from '@/components/product/ProductDetail'
 
-interface ProductPageProps {
-  params: { slug: string }
-}
-
 async function getProduct(slug: string) {
-  return prisma.product.findUnique({
+  const product = await prisma.product.findUnique({
     where: { slug },
-    include: { category: true }
+    include: {
+      category: true
+    }
   })
+  
+  return product
 }
 
 async function getRelatedProducts(categoryId: string, currentProductId: string) {
-  return prisma.product.findMany({
+  const products = await prisma.product.findMany({
     where: {
       categoryId,
       id: { not: currentProductId }
     },
-    include: { category: true },
+    include: {
+      category: true
+    },
     take: 4
   })
+  
+  return products
+}
+
+interface ProductPageProps {
+  params: Promise<{
+    slug: string
+  }>
+}
+
+// Next.js 15: Metadata generation için params Promise
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params
+  const product = await getProduct(slug)
+  
+  if (!product) {
+    return {
+      title: 'Ürün Bulunamadı'
+    }
+  }
+
+  return {
+    title: `${product.name} - Çiçek Dükkanım`,
+    description: product.description,
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      images: product.image ? [product.image] : [],
+    }
+  }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const product = await getProduct(params.slug)
-
-  if (!product) notFound()
-
+  // Next.js 15: params artık Promise
+  const { slug } = await params
+  
+  const product = await getProduct(slug)
+  
+  if (!product) {
+    notFound()
+  }
+  
   const relatedProducts = await getRelatedProducts(product.categoryId, product.id)
-
-  return (
-    <main className="container mx-auto px-4 py-8">
-      <ProductDetail product={product} relatedProducts={relatedProducts} />
-    </main>
-  )
+  
+  return <ProductDetail product={product} relatedProducts={relatedProducts} />
 }

@@ -4,13 +4,9 @@ import Link from 'next/link'
 import { ShoppingCart, Search, User, Menu, Phone, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { useCartStore } from '@/store/cart'
+import CartBadge from './CartBadge'
 
 export default function Header() {
-  const getTotalItems = useCartStore(state => state.getTotalItems)
-  const cartCount = getTotalItems()
-
   return (
     <header className="border-b sticky top-0 bg-white z-50">
       <div className="container mx-auto px-4">
@@ -74,13 +70,7 @@ export default function Header() {
               <Link href="/sepet">
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 <span className="hidden md:inline">Sepetim</span>
-                {cartCount > 0 && (
-                  <Badge 
-                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-pink-600 hover:bg-pink-700"
-                  >
-                    {cartCount}
-                  </Badge>
-                )}
+                <CartBadge />
               </Link>
             </Button>
 

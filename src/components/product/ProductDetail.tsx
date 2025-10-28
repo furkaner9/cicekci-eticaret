@@ -68,7 +68,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
         <Link href="/" className="hover:text-pink-600">Ana Sayfa</Link>
         <span>/</span>
-        <Link href="/urunler" className="hover:text-pink-600">Ürünler</Link>
+        <Link href="/urun" className="hover:text-pink-600">Ürünler</Link>
         <span>/</span>
         {product.category && (
           <>

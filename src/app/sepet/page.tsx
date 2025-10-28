@@ -51,7 +51,7 @@ export default function CartPage() {
               Henüz sepetinize ürün eklemediniz.
             </p>
             <Button asChild className="bg-pink-600 hover:bg-pink-700">
-              <Link href="/urunler">Alışverişe Başla</Link>
+              <Link href="/urun">Alışverişe Başla</Link>
             </Button>
           </CardContent>
         </Card>
@@ -223,7 +223,7 @@ export default function CartPage() {
                 </Link>
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/urunler">
+                <Link href="/urun">
                   Alışverişe Devam Et
                 </Link>
               </Button>

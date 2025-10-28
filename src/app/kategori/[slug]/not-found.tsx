@@ -9,9 +9,9 @@ export default function NotFound() {
       <Card className="max-w-md mx-auto text-center">
         <CardContent className="pt-12 pb-8">
           <SearchX size={64} className="mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Ürün Bulunamadı</h2>
+          <h2 className="text-2xl font-bold mb-2">Kategori Bulunamadı</h2>
           <p className="text-muted-foreground mb-6">
-            Aradığınız ürün mevcut değil veya kaldırılmış olabilir.
+            Aradığınız kategori mevcut değil veya kaldırılmış olabilir.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild className="bg-pink-600 hover:bg-pink-700">

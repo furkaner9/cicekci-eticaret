@@ -31,7 +31,7 @@ export default function Footer() {
             <h3 className="text-white text-lg font-bold mb-4">Hızlı Linkler</h3>
             <ul className="space-y-2 text-sm">
               <li><Link href="/hakkimizda" className="hover:text-pink-400">Hakkımızda</Link></li>
-              <li><Link href="/urunler" className="hover:text-pink-400">Ürünlerimiz</Link></li>
+              <li><Link href="/urun" className="hover:text-pink-400">Ürünlerimiz</Link></li>
               <li><Link href="/kampanyalar" className="hover:text-pink-400">Kampanyalar</Link></li>
               <li><Link href="/blog" className="hover:text-pink-400">Blog</Link></li>
               <li><Link href="/iletisim" className="hover:text-pink-400">İletişim</Link></li>

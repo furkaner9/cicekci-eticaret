@@ -1,7 +1,15 @@
-"use client"
 import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/product/ProductCard'
-import Link from 'next/link'
+import CategoryFilter from '@/components/category/CategoryFilter'
+import SortSelect from '@/components/category/SortSelect'
+
+interface ProductsPageProps {
+  searchParams: Promise<{
+    sort?: string
+    minPrice?: string
+    maxPrice?: string
+  }>
+}
 
 async function getProducts() {
   const products = await prisma.product.findMany({
@@ -29,9 +37,30 @@ async function getCategories() {
   return categories
 }
 
-export default async function ProductsPage() {
-  const products = await getProducts()
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const { sort, minPrice, maxPrice } = await searchParams
+  
+  let products = await getProducts()
   const categories = await getCategories()
+
+  // Fiyat filtreleme
+  if (minPrice) {
+    products = products.filter(p => p.price >= parseFloat(minPrice))
+  }
+  if (maxPrice) {
+    products = products.filter(p => p.price <= parseFloat(maxPrice))
+  }
+  
+  // Sıralama
+  if (sort === 'price-asc') {
+    products.sort((a, b) => a.price - b.price)
+  } else if (sort === 'price-desc') {
+    products.sort((a, b) => b.price - a.price)
+  } else if (sort === 'name-asc') {
+    products.sort((a, b) => a.name.localeCompare(b.name, 'tr'))
+  } else if (sort === 'newest') {
+    products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -40,66 +69,21 @@ export default async function ProductsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar - Filtreler */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-            <h2 className="text-xl font-bold mb-4">Kategoriler</h2>
-            <ul className="space-y-2">
-              <li>
-                <Link 
-                  href="/urunler"
-                  className="text-gray-700 hover:text-pink-600 flex items-center justify-between"
-                >
-                  <span>Tümü</span>
-                  <span className="text-sm text-gray-500">{products.length}</span>
-                </Link>
-              </li>
-              {categories.map((category) => (
-                <li key={category.id}>
-                  <Link 
-                    href={`/kategori/${category.slug}`}
-                    className="text-gray-700 hover:text-pink-600 flex items-center justify-between"
-                  >
-                    <span>{category.name}</span>
-                    <span className="text-sm text-gray-500">
-                      {category._count.products}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            <hr className="my-6" />
-
-            <h2 className="text-xl font-bold mb-4">Fiyat Aralığı</h2>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">0₺ - 200₺</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">200₺ - 400₺</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm">400₺ ve üzeri</span>
-              </label>
-            </div>
-          </div>
+          <CategoryFilter 
+            categories={categories}
+            currentCategory="all"
+            productCount={products.length}
+          />
         </div>
 
         {/* Ürünler Grid */}
         <div className="lg:col-span-3">
           {/* Sıralama */}
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-gray-600">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <p className="text-muted-foreground">
               <span className="font-semibold">{products.length}</span> ürün bulundu
             </p>
-            <select className="border rounded-lg px-4 py-2 text-sm">
-              <option>En Yeni</option>
-              <option>Fiyat: Düşükten Yükseğe</option>
-              <option>Fiyat: Yüksekten Düşüğe</option>
-              <option>Popülerlik</option>
-            </select>
+            <SortSelect />
           </div>
 
           {products.length > 0 ? (
@@ -110,7 +94,7 @@ export default async function ProductsPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-500">Henüz ürün bulunmamaktadır.</p>
+              <p className="text-muted-foreground">Ürün bulunamadı. Filtreleri temizleyin.</p>
             </div>
           )}
         </div>

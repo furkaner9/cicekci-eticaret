@@ -20,6 +20,7 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { Category } from '@/types'
 import { Loader2 } from 'lucide-react'
+import ImageUpload from './ImageUpload'
 
 const productSchema = z.object({
   name: z.string().min(3, 'Ürün adı en az 3 karakter olmalıdır'),
@@ -32,7 +33,7 @@ const productSchema = z.object({
     message: 'Stok 0 veya daha büyük bir sayı olmalıdır',
   }),
   categoryId: z.string().min(1, 'Kategori seçmelisiniz'),
-  image: z.string().url('Geçerli bir URL giriniz').optional().or(z.literal('')),
+  image: z.string().optional(),
   featured: z.boolean(),
 })
 
@@ -46,6 +47,7 @@ interface ProductFormProps {
 
 export default function ProductForm({ categories, initialData, isEdit = false }: ProductFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [imageUrl, setImageUrl] = useState(initialData?.image || '')
   const router = useRouter()
 
   const {
@@ -97,6 +99,11 @@ export default function ProductForm({ categories, initialData, isEdit = false }:
     }
   }
 
+  const handleImageChange = (url: string) => {
+    setImageUrl(url)
+    setValue('image', url)
+  }
+
   const onSubmit: SubmitHandler<ProductFormData> = async (data) => {
     setIsLoading(true)
 
@@ -114,6 +121,7 @@ export default function ProductForm({ categories, initialData, isEdit = false }:
         },
         body: JSON.stringify({
           ...data,
+          image: imageUrl,
           price: parseFloat(data.price),
           stock: parseInt(data.stock),
           images: [],
@@ -245,20 +253,13 @@ export default function ProductForm({ categories, initialData, isEdit = false }:
         )}
       </div>
 
-      {/* Görsel URL */}
+      {/* Görsel Yükleme */}
       <div className="space-y-2">
-        <Label htmlFor="image">Görsel URL</Label>
-        <Input
-          id="image"
-          {...register('image')}
-          placeholder="https://example.com/image.jpg"
+        <Label>Ürün Görseli</Label>
+        <ImageUpload 
+          value={imageUrl}
+          onChange={handleImageChange}
         />
-        {errors.image && (
-          <p className="text-sm text-destructive">{errors.image.message}</p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Ürün görselinin URL'sini giriniz (opsiyonel)
-        </p>
       </div>
 
       {/* Öne Çıkan */}

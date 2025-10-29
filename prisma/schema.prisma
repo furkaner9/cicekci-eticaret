@@ -57,14 +57,39 @@ model User {
 
 model Order {
   id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  items           Json     // Sipariş detayları JSON formatında
-  total           Float
-  status          String   @default("pending") // pending, confirmed, delivering, completed, cancelled
-  deliveryDate    DateTime
+  orderNumber     String   @unique // Sipariş numarası
+  
+  // Müşteri Bilgileri
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  
+  // Teslimat Bilgileri
   deliveryAddress String
-  message         String?  // Mesaj kartı
+  deliveryCity    String
+  deliveryDistrict String
+  deliveryDate    DateTime
+  deliveryTime    String   // "09:00-12:00", "12:00-15:00" vs
+  
+  // Sipariş Detayları
+  items           Json     // Ürünler ve miktarları
+  subtotal        Float    // Ara toplam
+  shipping        Float    @default(0) // Kargo ücreti
+  total           Float    // Toplam
+  
+  // Ödeme
+  paymentMethod   String   // "credit_card", "cash_on_delivery"
+  paymentStatus   String   @default("pending") // pending, paid, failed
+  
+  // Sipariş Durumu
+  status          String   @default("pending") // pending, confirmed, preparing, shipping, delivered, cancelled
+  notes           String?  // Müşteri notu
+  
+  // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  
+  // İlişkiler (Opsiyonel - Kullanıcı sistemi eklendiğinde)
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
 }

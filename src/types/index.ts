@@ -29,3 +29,39 @@ export interface CartItem {
   quantity: number
   message?: string
 }
+
+export interface Order {
+  id: string
+  orderNumber: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  deliveryAddress: string
+  deliveryCity: string
+  deliveryDistrict: string
+  deliveryDate: Date
+  deliveryTime: string
+  items: CartItem[]
+  subtotal: number
+  shipping: number
+  total: number
+  paymentMethod: string
+  paymentStatus: string
+  status: string
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface OrderFormData {
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  deliveryAddress: string
+  deliveryCity: string
+  deliveryDistrict: string
+  deliveryDate: string
+  deliveryTime: string
+  paymentMethod: string
+  notes?: string
+}

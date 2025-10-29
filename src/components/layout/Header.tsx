@@ -1,9 +1,12 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, Search, User, Menu, Phone, Mail } from 'lucide-react'
+import { ShoppingCart, User, Menu, Phone, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { useCartStore } from '@/store/cart'
+import SearchBar from './SearchBar'
 import CartBadge from './CartBadge'
 
 export default function Header() {
@@ -39,22 +42,9 @@ export default function Header() {
             🌸 Çiçek Dükkanım
           </Link>
 
-          {/* Arama */}
+          {/* Arama - Desktop */}
           <div className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Input
-                type="text"
-                placeholder="Çiçek veya buket ara..."
-                className="pr-10"
-              />
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="absolute right-0 top-0"
-              >
-                <Search size={20} />
-              </Button>
-            </div>
+            <SearchBar />
           </div>
 
           {/* Sağ Menü */}
@@ -101,20 +91,7 @@ export default function Header() {
 
         {/* Mobil Arama */}
         <div className="md:hidden pb-3">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Ara..."
-              className="pr-10"
-            />
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              className="absolute right-0 top-0"
-            >
-              <Search size={18} />
-            </Button>
-          </div>
+          <SearchBar />
         </div>
       </div>
     </header>

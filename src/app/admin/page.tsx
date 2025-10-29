@@ -1,6 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
 import { Package, ShoppingCart, Users, TrendingUp } from 'lucide-react'
+import Link from 'next/link'
+import { format } from 'date-fns'
+import { tr } from 'date-fns/locale'
 
 async function getDashboardStats() {
   const [productsCount, ordersCount, usersCount, totalRevenue] = await Promise.all([
@@ -34,6 +39,15 @@ async function getRecentProducts() {
   })
 }
 
+async function getRecentOrders() {
+  return await prisma.order.findMany({
+    take: 5,
+    orderBy: {
+      createdAt: 'desc'
+    }
+  })
+}
+
 async function getLowStockProducts() {
   return await prisma.product.findMany({
     where: {
@@ -48,9 +62,19 @@ async function getLowStockProducts() {
   })
 }
 
+const statusColors = {
+  pending: { label: 'Beklemede', color: 'bg-yellow-500' },
+  confirmed: { label: 'Onaylandı', color: 'bg-blue-500' },
+  preparing: { label: 'Hazırlanıyor', color: 'bg-purple-500' },
+  shipping: { label: 'Kargoda', color: 'bg-indigo-500' },
+  delivered: { label: 'Teslim Edildi', color: 'bg-green-500' },
+  cancelled: { label: 'İptal Edildi', color: 'bg-red-500' }
+}
+
 export default async function AdminDashboard() {
   const stats = await getDashboardStats()
   const recentProducts = await getRecentProducts()
+  const recentOrders = await getRecentOrders()
   const lowStockProducts = await getLowStockProducts()
 
   const statsCards = [
@@ -114,10 +138,56 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Son Siparişler */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Son Siparişler</CardTitle>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/admin/siparisler">Tümünü Gör</Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {recentOrders.length > 0 ? (
+              <div className="space-y-4">
+                {recentOrders.map((order) => {
+                  const status = statusColors[order.status as keyof typeof statusColors] || statusColors.pending
+                  return (
+                    <Link 
+                      key={order.id}
+                      href={`/admin/siparisler/${order.id}`}
+                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted transition"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{order.orderNumber}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {order.customerName}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">₺{order.total.toFixed(2)}</p>
+                        <Badge className={`${status.color} text-xs`}>
+                          {status.label}
+                        </Badge>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">
+                Henüz sipariş bulunmuyor
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Son Eklenen Ürünler */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Son Eklenen Ürünler</CardTitle>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/admin/urunler">Tümünü Gör</Link>
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -150,59 +220,59 @@ export default async function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Düşük Stoklu Ürünler */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Düşük Stoklu Ürünler
-              <span className="text-sm font-normal text-muted-foreground">
-                (≤5 adet)
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {lowStockProducts.length > 0 ? (
-              <div className="space-y-4">
-                {lowStockProducts.map((product) => (
-                  <div key={product.id} className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0">
-                      {product.image ? (
-                        <img 
-                          src={product.image} 
-                          alt={product.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xl">
-                          🌸
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{product.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        ₺{product.price.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className={`text-sm font-semibold ${
-                      product.stock === 0 
-                        ? 'text-red-600' 
-                        : 'text-orange-600'
-                    }`}>
-                      {product.stock === 0 ? 'Tükendi' : `${product.stock} adet`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">
-                Düşük stoklu ürün bulunmuyor
-              </p>
-            )}
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Düşük Stoklu Ürünler */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Düşük Stoklu Ürünler
+            <span className="text-sm font-normal text-muted-foreground">
+              (≤5 adet)
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lowStockProducts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {lowStockProducts.map((product) => (
+                <div key={product.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                  <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0">
+                    {product.image ? (
+                      <img 
+                        src={product.image} 
+                        alt={product.name}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xl">
+                        🌸
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{product.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      ₺{product.price.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className={`text-sm font-semibold ${
+                    product.stock === 0 
+                      ? 'text-red-600' 
+                      : 'text-orange-600'
+                  }`}>
+                    {product.stock === 0 ? 'Tükendi' : `${product.stock} adet`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">
+              Düşük stoklu ürün bulunmuyor
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

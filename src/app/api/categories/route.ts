@@ -48,3 +48,23 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const  body = await request.json()
+    const { id } = body
+    await prisma.category.delete({
+      where: { id }
+    })
+
+    
+
+  } catch (error) {
+    console.error('Kategori silinirken hata:', error)
+    return NextResponse.json(
+      { error: 'Kategori silinemedi' },
+      { status: 500 }
+    )
+    
+  }
+}

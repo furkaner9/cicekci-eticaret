@@ -77,7 +77,7 @@ export default function CategoryFilter({
           <ul className="space-y-2">
             <li>
               <Link 
-                href="/urunler"
+                href="/urun"
                 className={`flex items-center justify-between py-2 px-3 rounded-lg transition ${
                   currentCategory === 'all'
                     ? 'bg-pink-100 text-pink-600 font-medium'

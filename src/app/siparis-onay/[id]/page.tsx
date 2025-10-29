@@ -226,7 +226,7 @@ export default async function OrderConfirmPage({ params }: OrderConfirmPageProps
             <Link href="/">Ana Sayfaya Dön</Link>
           </Button>
           <Button asChild variant="outline" className="flex-1">
-            <Link href="/urunler">Alışverişe Devam Et</Link>
+            <Link href="/urun">Alışverişe Devam Et</Link>
           </Button>
         </div>
       </div>

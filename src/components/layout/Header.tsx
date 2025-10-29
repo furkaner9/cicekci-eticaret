@@ -1,13 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, User, Menu, Phone, Mail } from 'lucide-react'
+import { ShoppingCart, Menu, Phone, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useCartStore } from '@/store/cart'
 import SearchBar from './SearchBar'
 import CartBadge from './CartBadge'
+import UserMenu from './UserMenu'
 
 export default function Header() {
   return (
@@ -49,13 +47,12 @@ export default function Header() {
 
           {/* Sağ Menü */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild className="hidden md:flex">
-              <Link href="/hesabim">
-                <User className="mr-2 h-4 w-4" />
-                Hesabım
-              </Link>
-            </Button>
+            {/* Kullanıcı Menüsü */}
+            <div className="hidden md:flex">
+              <UserMenu />
+            </div>
             
+            {/* Sepet */}
             <Button variant="ghost" size="sm" asChild className="relative">
               <Link href="/sepet">
                 <ShoppingCart className="mr-2 h-4 w-4" />
@@ -64,6 +61,7 @@ export default function Header() {
               </Link>
             </Button>
 
+            {/* Mobil Menü */}
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu size={24} />
             </Button>

@@ -101,7 +101,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               Aramak istediğiniz ürünü yukarıdaki arama kutusuna yazın
             </p>
             <Link 
-              href="/urunler"
+              href="/urun"
               className="text-pink-600 hover:underline font-medium"
             >
               Veya tüm ürünlere göz atın →
@@ -129,7 +129,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link 
-                href="/urunler"
+                href="/urun"
                 className="text-pink-600 hover:underline font-medium"
               >
                 Tüm ürünlere göz at →

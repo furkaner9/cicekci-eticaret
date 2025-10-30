@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useCartStore } from '@/store/cart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,9 +22,13 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function CheckoutPage() {
+  const { data: session } = useSession()
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCartStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingUserData, setLoadingUserData] = useState(true)
+  const [addresses, setAddresses] = useState<any[]>([])
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('')
 
   // Form state
   const [customerName, setCustomerName] = useState('')
@@ -38,8 +43,64 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState('')
 
   const subtotal = getTotalPrice()
-  const shipping = 0 // Ücretsiz kargo
+  const shipping = 0
   const total = subtotal + shipping
+
+  // Kullanıcı verilerini yükle
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (session?.user) {
+        try {
+          // Kullanıcı bilgilerini doldur
+          setCustomerName(session.user.name || '')
+          setCustomerEmail(session.user.email || '')
+
+          // Profil bilgilerini çek
+          const profileRes = await fetch('/api/user/profile')
+          if (profileRes.ok) {
+            const profile = await profileRes.json()
+            setCustomerPhone(profile.phone || '')
+          }
+
+          // Adresleri çek
+          const addressRes = await fetch('/api/addresses')
+          if (addressRes.ok) {
+            const userAddresses = await addressRes.json()
+            setAddresses(userAddresses)
+            
+            // Varsayılan adresi seç
+            const defaultAddress = userAddresses.find((addr: any) => addr.isDefault)
+            if (defaultAddress) {
+              setSelectedAddressId(defaultAddress.id)
+              fillAddressData(defaultAddress)
+            }
+          }
+        } catch (error) {
+          console.error('Kullanıcı verileri yüklenirken hata:', error)
+        }
+      }
+      setLoadingUserData(false)
+    }
+
+    loadUserData()
+  }, [session])
+
+  // Seçili adresi form'a doldur
+  const fillAddressData = (address: any) => {
+    setDeliveryAddress(address.address)
+    setDeliveryCity(address.city)
+    setDeliveryDistrict(address.district)
+    setCustomerPhone(address.phone)
+  }
+
+  // Adres seçimi değiştiğinde
+  const handleAddressChange = (addressId: string) => {
+    setSelectedAddressId(addressId)
+    const address = addresses.find(addr => addr.id === addressId)
+    if (address) {
+      fillAddressData(address)
+    }
+  }
 
   // Sepet boşsa yönlendir
   if (items.length === 0) {
@@ -53,7 +114,7 @@ export default function CheckoutPage() {
               Ödeme yapabilmek için sepetinizde ürün olmalıdır.
             </p>
             <Button asChild className="bg-pink-600 hover:bg-pink-700">
-              <Link href="/urun">Alışverişe Başla</Link>
+              <Link href="/urunler">Alışverişe Başla</Link>
             </Button>
           </CardContent>
         </Card>
@@ -92,6 +153,7 @@ export default function CheckoutPage() {
 
     try {
       const orderData = {
+        userId: session?.user?.id || null,
         customerName,
         customerEmail,
         customerPhone,
@@ -132,15 +194,12 @@ export default function CheckoutPage() {
 
       const data = await response.json()
 
-      // Sepeti temizle
       clearCart()
 
-      // Başarı mesajı
       toast.success('Siparişiniz Alındı! 🎉', {
         description: `Sipariş numaranız: ${data.order.orderNumber}`,
       })
 
-      // Sipariş onay sayfasına yönlendir
       router.push(`/siparis-onay/${data.order.id}`)
 
     } catch (error: any) {
@@ -160,6 +219,51 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Sol Taraf - Formlar */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Giriş Önerisi */}
+            {!session && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="pt-6">
+                  <p className="text-sm mb-2">
+                    <strong>Hesabınız var mı?</strong> Giriş yaparak daha hızlı alışveriş yapabilirsiniz.
+                  </p>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/giris?callbackUrl=/odeme`}>
+                      Giriş Yap
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Kayıtlı Adresler */}
+            {session && addresses.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin size={20} />
+                    Kayıtlı Adreslerim
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select value={selectedAddressId} onValueChange={handleAddressChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Adres seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {addresses.map((address) => (
+                        <SelectItem key={address.id} value={address.id}>
+                          {address.title} - {address.district}/{address.city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Veya aşağıdaki formu manuel olarak doldurun
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Müşteri Bilgileri */}
             <Card>
               <CardHeader>
@@ -410,7 +514,7 @@ export default function CheckoutPage() {
 
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || loadingUserData}
                   className="w-full bg-pink-600 hover:bg-pink-700"
                   size="lg"
                 >

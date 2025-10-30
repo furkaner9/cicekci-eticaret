@@ -25,8 +25,10 @@ model User {
   role          String    @default("customer") // customer, admin
   emailVerified DateTime?
   image         String?
+  reviews       Review[]   // ✨ YENİ
   orders        Order[]
   addresses     Address[]
+  favorites     Favorite[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -69,6 +71,8 @@ model Product {
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   featured    Boolean  @default(false)
+  favorites   Favorite[]
+   reviews     Review[]   // ✨ YENİ
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -108,4 +112,50 @@ model Order {
   // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+//Favori ürünler modeli
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId]) // Aynı ürün birden fazla favoriye eklenemez
+  @@index([userId])
+  @@index([productId])
+}
+// Ürün Yorumları modeli
+model Review {
+  id          String   @id @default(cuid())
+  
+  // İlişkiler
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Yorum Detayları
+  rating      Int      // 1-5 arası
+  title       String?  // Yorum başlığı (opsiyonel)
+  comment     String   // Yorum metni
+  
+  // Durum
+  isApproved  Boolean  @default(false) // Admin onayı
+  isVerified  Boolean  @default(false) // Doğrulanmış alıcı mı?
+  
+  // İstatistikler
+  helpfulCount    Int   @default(0) // Kaç kişi faydalı buldu
+  notHelpfulCount Int   @default(0) // Kaç kişi faydalı bulmadı
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Her kullanıcı bir ürüne sadece bir yorum yapabilir
+  @@unique([userId, productId])
+  @@index([productId])
+  @@index([userId])
+  @@index([isApproved])
 }

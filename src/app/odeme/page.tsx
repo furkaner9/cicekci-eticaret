@@ -114,7 +114,7 @@ export default function CheckoutPage() {
               Ödeme yapabilmek için sepetinizde ürün olmalıdır.
             </p>
             <Button asChild className="bg-pink-600 hover:bg-pink-700">
-              <Link href="/urunler">Alışverişe Başla</Link>
+              <Link href="/urun">Alışverişe Başla</Link>
             </Button>
           </CardContent>
         </Card>

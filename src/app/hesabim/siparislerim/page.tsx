@@ -169,7 +169,7 @@ export default async function MyOrdersPage() {
                 İlk siparişinizi vererek alışverişe başlayın
               </p>
               <Button asChild className="bg-pink-600 hover:bg-pink-700">
-                <Link href="/urunler">
+                <Link href="/urun">
                   Alışverişe Başla
                 </Link>
               </Button>

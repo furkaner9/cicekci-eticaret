@@ -164,7 +164,7 @@ export default async function ProfilePage() {
                 </Link>
               </Button>
               <Button variant="outline" asChild className="h-auto py-4 flex-col">
-                <Link href="/urunler">
+                <Link href="/urun">
                   <Package className="mb-2" size={24} />
                   <span className="text-sm">Alışverişe Devam</span>
                 </Link>

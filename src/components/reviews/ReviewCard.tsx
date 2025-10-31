@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
-import { toast } from 'sonner'; // <- değişiklik burada
+import { toast } from 'sonner';
 
 interface Review {
   id: string;
@@ -38,7 +38,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
 
   const handleVote = async (action: 'helpful' | 'notHelpful') => {
     if (voted) {
-      toast('Zaten oy kullandınız'); // <- use-toast yerine
+      toast.info('Zaten oy kullandınız');
       return;
     }
 
@@ -56,13 +56,10 @@ export default function ReviewCard({ review }: ReviewCardProps) {
           setNotHelpful((prev) => prev + 1);
         }
         setVoted(true);
-        toast.success('Oyunuz kaydedildi'); // <- use-toast yerine
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Bir hata oluştu'); // <- use-toast yerine
+        toast.success('Oyunuz kaydedildi, teşekkürler!');
       }
     } catch (error) {
-      toast.error('Bir hata oluştu'); // <- use-toast yerine
+      toast.error('Bir hata oluştu');
     }
   };
 

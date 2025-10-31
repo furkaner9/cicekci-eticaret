@@ -22,7 +22,9 @@ import {
 import { useCartStore } from '@/store/cart'
 import ProductCard from './ProductCard'
 import MessageCardDialog from './MessageCardDialog'
-import { toast } from 'sonner' // <-- Sonner import
+import ReviewList from '@/components/reviews/ReviewList'
+import FavoriteButton from '@/components/FavoriteButton'
+import { toast } from 'sonner'
 
 interface ProductDetailProps {
   product: Product
@@ -33,7 +35,6 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(product.image)
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false)
-  const [isFavorite, setIsFavorite] = useState(false)
   
   const addItem = useCartStore(state => state.addItem)
 
@@ -49,15 +50,6 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const handleMessageSubmit = (message: string) => {
     handleAddToCart(message)
     setIsMessageDialogOpen(false)
-  }
-
-  const handleToggleFavorite = () => {
-    setIsFavorite(!isFavorite)
-    if (!isFavorite) {
-      toast.success(`${product.name} favorilerinize eklendi ❤️`)
-    } else {
-      toast.error(`${product.name} favorilerinizden çıkarıldı`)
-    }
   }
 
   const images = [product.image, ...product.images].filter(Boolean)
@@ -113,6 +105,11 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                       Son {product.stock} Ürün
                     </Badge>
                   )}
+                </div>
+
+                {/* Favori Butonu */}
+                <div className="absolute top-4 right-4">
+                  <FavoriteButton productId={product.id} size="md" />
                 </div>
               </div>
             </CardContent>
@@ -229,16 +226,6 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 <MessageSquare className="mr-2 h-5 w-5" />
                 Mesaj Kartı ile Ekle
               </Button>
-              
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={handleToggleFavorite}
-              >
-                <Heart 
-                  className={`h-5 w-5 ${isFavorite ? 'fill-pink-600 text-pink-600' : ''}`}
-                />
-              </Button>
             </div>
           </div>
 
@@ -285,15 +272,17 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
         </div>
       </div>
 
-      {/* Detaylı Bilgiler - Tabs */}
+      {/* Detaylı Bilgiler - Tabs (YENİ: Yorumlar eklendi) */}
       <Card className="mb-16">
         <CardContent className="p-6">
           <Tabs defaultValue="description">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="description">Açıklama</TabsTrigger>
-              <TabsTrigger value="delivery">Teslimat Bilgileri</TabsTrigger>
-              <TabsTrigger value="care">Bakım Önerileri</TabsTrigger>
+              <TabsTrigger value="delivery">Teslimat</TabsTrigger>
+              <TabsTrigger value="care">Bakım</TabsTrigger>
+              <TabsTrigger value="reviews">Yorumlar</TabsTrigger>
             </TabsList>
+
             <TabsContent value="description" className="space-y-4 mt-6">
               <h3 className="font-semibold text-lg">Ürün Açıklaması</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -305,6 +294,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 ambalajıyla teslim edilir.
               </p>
             </TabsContent>
+
             <TabsContent value="delivery" className="space-y-4 mt-6">
               <h3 className="font-semibold text-lg">Teslimat Bilgileri</h3>
               <ul className="space-y-2 text-muted-foreground">
@@ -322,6 +312,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </li>
               </ul>
             </TabsContent>
+
             <TabsContent value="care" className="space-y-4 mt-6">
               <h3 className="font-semibold text-lg">Çiçek Bakım Önerileri</h3>
               <ul className="space-y-2 text-muted-foreground list-disc list-inside">
@@ -331,6 +322,11 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 <li>Doğrudan güneş ışığından ve ısı kaynaklarından uzak tutun.</li>
                 <li>Solmuş yaprak ve çiçekleri düzenli olarak temizleyin.</li>
               </ul>
+            </TabsContent>
+
+            {/* YENİ: Yorumlar Tab */}
+            <TabsContent value="reviews" className="mt-6">
+              <ReviewList productId={product.id} productName={product.name} />
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -41,7 +42,13 @@ const menuItems = [
     title: 'Ayarlar',
     href: '/admin/ayarlar',
     icon: Settings
-  }
+  },
+  {
+  title: 'Yorumlar',
+  href: '/admin/reviews',
+  icon: MessageSquare
+}
+
 ]
 
 export default function AdminLayout({

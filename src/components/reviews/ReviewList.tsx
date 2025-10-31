@@ -33,10 +33,11 @@ interface ReviewStats {
 
 interface ReviewListProps {
   productId: string;
+  productSlug: string; // EKLENDI
   productName: string;
 }
 
-export default function ReviewList({ productId, productName }: ReviewListProps) {
+export default function ReviewList({ productId, productSlug, productName }: ReviewListProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats>({
     averageRating: 0,
@@ -55,8 +56,9 @@ export default function ReviewList({ productId, productName }: ReviewListProps) 
   const fetchReviews = async () => {
     try {
       setLoading(true);
+      // SLUG kullanıyoruz artık
       const response = await fetch(
-        `/api/products/${productId}/reviews?sortBy=${sortBy}&page=${page}&limit=5`
+        `/api/products/${productSlug}/reviews?sortBy=${sortBy}&page=${page}&limit=5`
       );
 
       if (response.ok) {
@@ -107,6 +109,7 @@ export default function ReviewList({ productId, productName }: ReviewListProps) 
           </div>
           <ReviewForm
             productId={productId}
+            productSlug={productSlug}
             productName={productName}
             onSuccess={fetchReviews}
           />
@@ -150,6 +153,7 @@ export default function ReviewList({ productId, productName }: ReviewListProps) 
           <p className="text-gray-600 mb-4">Henüz yorum yapılmamış</p>
           <ReviewForm
             productId={productId}
+            productSlug={productSlug}
             productName={productName}
             onSuccess={fetchReviews}
           />

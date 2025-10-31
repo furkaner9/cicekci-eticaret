@@ -3,10 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 
+interface RouteParams {
+  params: Promise<{ reviewId: string }>;
+}
+
 // Yorum güncelle (kullanıcı kendi yorumunu)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { reviewId: string } }
+  context: RouteParams
 ) {
   try {
     const session = await auth();
@@ -18,10 +22,11 @@ export async function PATCH(
       );
     }
 
+    const { reviewId } = await context.params;
     const { rating, title, comment, action } = await req.json();
 
     const review = await prisma.review.findUnique({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
     });
 
     if (!review) {
@@ -36,7 +41,7 @@ export async function PATCH(
       const field = action === 'helpful' ? 'helpfulCount' : 'notHelpfulCount';
       
       const updatedReview = await prisma.review.update({
-        where: { id: params.reviewId },
+        where: { id: reviewId },
         data: {
           [field]: { increment: 1 },
         },
@@ -55,12 +60,12 @@ export async function PATCH(
 
     // Yorum güncelle
     const updatedReview = await prisma.review.update({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
       data: {
         rating: rating || review.rating,
         title: title?.trim(),
         comment: comment?.trim() || review.comment,
-        isApproved: false, // Tekrar admin onayına gönder
+        isApproved: false,
       },
       include: {
         user: {
@@ -86,7 +91,7 @@ export async function PATCH(
 // Yorum sil
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { reviewId: string } }
+  context: RouteParams
 ) {
   try {
     const session = await auth();
@@ -98,8 +103,10 @@ export async function DELETE(
       );
     }
 
+    const { reviewId } = await context.params;
+
     const review = await prisma.review.findUnique({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
     });
 
     if (!review) {
@@ -118,7 +125,7 @@ export async function DELETE(
     }
 
     await prisma.review.delete({
-      where: { id: params.reviewId },
+      where: { id: reviewId },
     });
 
     return NextResponse.json({ message: 'Review deleted successfully' });

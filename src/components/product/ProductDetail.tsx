@@ -326,7 +326,11 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
 
             {/* YENİ: Yorumlar Tab */}
             <TabsContent value="reviews" className="mt-6">
-              <ReviewList productId={product.id} productName={product.name} />
+              <ReviewList 
+                productId={product.id} 
+                productSlug={product.slug}
+                productName={product.name} 
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

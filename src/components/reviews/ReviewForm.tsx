@@ -1,4 +1,3 @@
-// components/reviews/ReviewForm.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -63,7 +62,7 @@ export default function ReviewForm({
       });
 
       if (response.ok) {
-        toast.success('Yorumunuz alındı. Onaylandıktan sonra yayınlanacaktır.');
+        toast.success('Yorumunuz başarıyla eklendi! 🎉');
         setShowForm(false);
         setFormData({ rating: 0, title: '', comment: '' });
         onSuccess?.();

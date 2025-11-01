@@ -1,4 +1,3 @@
-// app/admin/reviews/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import StarRating from '@/components/reviews/StarRating';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -15,22 +15,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Check, X, Trash2 } from 'lucide-react';
+import { Trash2, Search } from 'lucide-react';
 
 interface Review {
   id: string;
   rating: number;
   title?: string;
   comment: string;
-  isApproved: boolean;
   isVerified: boolean;
   createdAt: string;
   user: {
@@ -47,8 +39,9 @@ export default function AdminReviewsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('pending');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -62,38 +55,37 @@ export default function AdminReviewsPage() {
     if (status === 'authenticated' && session?.user?.role === 'admin') {
       fetchReviews();
     }
-  }, [status, session, filter]);
+  }, [status, session]);
+
+  useEffect(() => {
+    // Arama filtresi
+    if (searchTerm) {
+      const filtered = reviews.filter(
+        (review) =>
+          review.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          review.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          review.comment.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredReviews(filtered);
+    } else {
+      setFilteredReviews(reviews);
+    }
+  }, [searchTerm, reviews]);
 
   const fetchReviews = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/reviews?filter=${filter}`);
+      const response = await fetch('/api/admin/reviews');
       if (response.ok) {
         const data = await response.json();
         setReviews(data.reviews);
+        setFilteredReviews(data.reviews);
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
       toast.error('Yorumlar yüklenirken hata oluştu');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleApprove = async (reviewId: string, approved: boolean) => {
-    try {
-      const response = await fetch(`/api/admin/reviews/${reviewId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isApproved: approved }),
-      });
-
-      if (response.ok) {
-        toast.success(approved ? 'Yorum onaylandı ✓' : 'Yorum reddedildi');
-        fetchReviews();
-      }
-    } catch (error) {
-      toast.error('Bir hata oluştu');
     }
   };
 
@@ -108,6 +100,8 @@ export default function AdminReviewsPage() {
       if (response.ok) {
         toast.success('Yorum silindi');
         fetchReviews();
+      } else {
+        toast.error('Yorum silinirken hata oluştu');
       }
     } catch (error) {
       toast.error('Bir hata oluştu');
@@ -119,6 +113,8 @@ export default function AdminReviewsPage() {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -144,40 +140,41 @@ export default function AdminReviewsPage() {
           </p>
         </div>
 
-        {/* Filtre */}
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tümü</SelectItem>
-            <SelectItem value="pending">Onay Bekleyen</SelectItem>
-            <SelectItem value="approved">Onaylanmış</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Arama */}
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Input
+            type="text"
+            placeholder="Kullanıcı, ürün veya yorum ara..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
       {/* Tablo */}
-      {reviews.length === 0 ? (
+      {filteredReviews.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-600">Yorum bulunamadı</p>
+          <p className="text-gray-600">
+            {searchTerm ? 'Arama sonucu bulunamadı' : 'Henüz yorum yok'}
+          </p>
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-hidden bg-white">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Kullanıcı</TableHead>
                 <TableHead>Ürün</TableHead>
                 <TableHead>Puan</TableHead>
-                <TableHead>Yorum</TableHead>
-                <TableHead>Durum</TableHead>
+                <TableHead className="max-w-xs">Yorum</TableHead>
                 <TableHead>Tarih</TableHead>
-                <TableHead className="text-right">İşlemler</TableHead>
+                <TableHead className="text-right">İşlem</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {reviews.map((review) => (
+              {filteredReviews.map((review) => (
                 <TableRow key={review.id}>
                   <TableCell>
                     <div>
@@ -187,7 +184,7 @@ export default function AdminReviewsPage() {
                       </p>
                       {review.isVerified && (
                         <Badge variant="secondary" className="text-xs mt-1">
-                          ✓ Doğrulanmış
+                          ✓ Doğrulanmış Alıcı
                         </Badge>
                       )}
                     </div>
@@ -214,42 +211,18 @@ export default function AdminReviewsPage() {
                       {review.comment}
                     </p>
                   </TableCell>
-                  <TableCell>
-                    {review.isApproved ? (
-                      <Badge variant="default">Onaylandı</Badge>
-                    ) : (
-                      <Badge variant="secondary">Bekliyor</Badge>
-                    )}
-                  </TableCell>
                   <TableCell className="text-sm text-gray-600">
                     {formatDate(review.createdAt)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2">
-                      {!review.isApproved && (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => handleApprove(review.id, true)}
-                        >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                      )}
-                      {review.isApproved && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleApprove(review.id, false)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
+                    <div className="flex justify-end">
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => handleDelete(review.id)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Sil
                       </Button>
                     </div>
                   </TableCell>

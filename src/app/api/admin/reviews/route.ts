@@ -1,4 +1,4 @@
-// app/api/admin/reviews/route.ts
+// app/api/admin/reviews/route.ts - Sadece GET kalsın
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
@@ -14,19 +14,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(req.url);
-    const filter = searchParams.get('filter') || 'all';
-
-    const where: any = {};
-
-    if (filter === 'pending') {
-      where.isApproved = false;
-    } else if (filter === 'approved') {
-      where.isApproved = true;
-    }
-
     const reviews = await prisma.review.findMany({
-      where,
       include: {
         user: {
           select: {

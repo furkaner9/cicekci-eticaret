@@ -1,18 +1,36 @@
 'use client'
 
+import { useState } from 'react'
 import { useCartStore } from '@/store/cart'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { Minus, Plus, Trash2, ShoppingBag, MessageSquare } from 'lucide-react'
+import { Minus, Plus, Trash2, ShoppingBag, MessageSquare, Tag, X } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+interface AppliedCoupon {
+  code: string;
+  discountType: string;
+  discountValue: number;
+  discountAmount: number;
+  description?: string;
+}
+
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCartStore()
+  
+  // Kupon state'leri
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null)
+  const [loadingCoupon, setLoadingCoupon] = useState(false)
+
+  const subtotal = getTotalPrice()
+  const discount = appliedCoupon?.discountAmount || 0
+  const total = subtotal - discount
 
   const handleRemoveItem = (productId: string, productName: string) => {
     removeItem(productId)
@@ -23,6 +41,7 @@ export default function CartPage() {
 
   const handleClearCart = () => {
     clearCart()
+    setAppliedCoupon(null)
     toast.info('Sepet Temizlendi', {
       description: 'Tüm ürünler sepetinizden çıkarıldı.',
     })
@@ -36,10 +55,56 @@ export default function CartPage() {
       return
     }
     updateQuantity(productId, newQuantity)
+    
+    // Kupon varsa yeniden hesapla
+    if (appliedCoupon) {
+      validateCoupon(appliedCoupon.code)
+    }
   }
 
-  // ... Geri kalan kod aynı kalacak
-  
+  const validateCoupon = async (code: string) => {
+    if (!code.trim()) {
+      toast.error('Lütfen kupon kodu girin')
+      return
+    }
+
+    try {
+      setLoadingCoupon(true)
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: code.trim(),
+          subtotal,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setAppliedCoupon(data.coupon)
+        toast.success('Kupon Uygulandı!', {
+          description: `${data.coupon.discountAmount.toFixed(2)} ₺ indirim kazandınız`,
+        })
+        setCouponCode('')
+      } else {
+        toast.error('Kupon Geçersiz', {
+          description: data.error || 'Kupon kodu geçersiz',
+        })
+      }
+    } catch (error) {
+      toast.error('Bir hata oluştu')
+    } finally {
+      setLoadingCoupon(false)
+    }
+  }
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode('')
+    toast.success('Kupon kaldırıldı')
+  }
+
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16">
@@ -188,34 +253,102 @@ export default function CartPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Ara Toplam</span>
-                <span className="font-semibold">₺{getTotalPrice().toFixed(2)}</span>
+                <span className="font-semibold">₺{subtotal.toFixed(2)}</span>
               </div>
+              
+              {/* İndirim */}
+              {discount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>İndirim</span>
+                  <span className="font-semibold">-₺{discount.toFixed(2)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Kargo</span>
                 <span className="font-semibold text-green-600">Ücretsiz</span>
               </div>
+
               {items.some(item => item.message) && (
                 <div className="flex justify-between">
-                    <span className="text-muted-foreground">Mesaj Kartı</span>
+                  <span className="text-muted-foreground">Mesaj Kartı</span>
                   <span className="font-semibold text-green-600">Ücretsiz</span>
                 </div>
               )}
+
               <Separator />
+
               <div className="flex justify-between text-lg">
                 <span className="font-bold">Toplam</span>
                 <span className="font-bold text-pink-600">
-                  ₺{getTotalPrice().toFixed(2)}
+                  ₺{total.toFixed(2)}
                 </span>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="coupon">İndirim Kodu</Label>
-                <div className="flex gap-2">
-                  <Input id="coupon" placeholder="Kupon kodunuz" />
-                  <Button variant="outline">Uygula</Button>
+              {/* Kupon Alanı */}
+              <Separator />
+              
+              {appliedCoupon ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-green-100 p-2 rounded-lg">
+                        <Tag className="text-green-600" size={18} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm">Kupon Uygulandı:</span>
+                          <Badge className="bg-green-600 text-xs">
+                            {appliedCoupon.code}
+                          </Badge>
+                        </div>
+                        {appliedCoupon.description && (
+                          <p className="text-xs text-gray-600 mb-2">
+                            {appliedCoupon.description}
+                          </p>
+                        )}
+                        <p className="text-sm font-medium text-green-700">
+                          İndirim: -{appliedCoupon.discountAmount.toFixed(2)} ₺
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeCoupon}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <X size={18} />
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="coupon" className="flex items-center gap-2">
+                    <Tag size={16} />
+                    İndirim Kuponu
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="coupon"
+                      placeholder="Kupon kodunuz"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      onKeyPress={(e) => e.key === 'Enter' && validateCoupon(couponCode)}
+                      disabled={loadingCoupon}
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => validateCoupon(couponCode)}
+                      disabled={loadingCoupon || !couponCode.trim()}
+                    >
+                      {loadingCoupon ? 'Kontrol...' : 'Uygula'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
+
             <CardFooter className="flex flex-col gap-2">
               <Button className="w-full bg-pink-600 hover:bg-pink-700" size="lg" asChild>
                 <Link href="/odeme">

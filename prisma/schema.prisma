@@ -98,6 +98,8 @@ model Order {
   // Sipariş Detayları
   items           Json
   subtotal        Float
+  discount        Float    @default(0)      // ✨ YENİ: İndirim tutarı
+  couponCode      String?                    // ✨ YENİ: Kullanılan kupon kodu
   shipping        Float    @default(0)
   total           Float
   
@@ -151,4 +153,75 @@ model Review {
   @@unique([userId, productId])
   @@index([productId])
   @@index([userId])
+}
+//kupon modeli
+model Coupon {
+  id              String    @id @default(cuid())
+  code            String    @unique // Kupon kodu (örn: SUMMER2024)
+  
+  // İndirim Bilgileri
+  discountType    String    // "percentage" veya "fixed"
+  discountValue   Float     // Yüzde ise 10, 20 gibi; Sabit ise 50, 100 gibi
+  
+  // Koşullar
+  minPurchase     Float     @default(0) // Minimum sepet tutarı
+  maxDiscount     Float?    // Maksimum indirim tutarı (yüzde için)
+  
+  // Kullanım
+  usageLimit      Int?      // Toplam kullanım limiti (null ise sınırsız)
+  usedCount       Int       @default(0) // Kullanım sayısı
+  
+  // Geçerlilik
+  startDate       DateTime? // Başlangıç tarihi (null ise hemen aktif)
+  endDate         DateTime? // Bitiş tarihi (null ise süresiz)
+  isActive        Boolean   @default(true)
+  
+  // Açıklama
+  description     String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+// Site Ayarları modeli
+model Settings {
+  id              String   @id @default(cuid())
+  
+  // Site Bilgileri
+  siteName        String   @default("Çiçek Dükkanım")
+  siteDescription String?
+  siteLogo        String?
+  
+  // İletişim Bilgileri
+  phone           String?
+  email           String?
+  address         String?
+  
+  // Kargo Ayarları
+  freeShippingLimit Float  @default(200) // Ücretsiz kargo için minimum tutar
+  shippingCost      Float  @default(0)   // Normal kargo ücreti
+  
+  // E-posta Ayarları
+  smtpHost        String?
+  smtpPort        Int?
+  smtpUser        String?
+  smtpPassword    String?
+  emailFrom       String?
+  
+  // Sosyal Medya
+  facebook        String?
+  instagram       String?
+  twitter         String?
+  whatsapp        String?
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+  
+  // Diğer
+  maintenanceMode Boolean  @default(false)
+  
+  updatedAt       DateTime @updatedAt
+  
+  @@map("settings")
 }

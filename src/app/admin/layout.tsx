@@ -12,10 +12,12 @@ import {
   LogOut,
   Menu,
   X,
-  MessageSquare
+  MessageSquare,
+  Tag
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { title } from 'process'
 
 const menuItems = [
   {
@@ -38,16 +40,23 @@ const menuItems = [
     href: '/admin/musteriler',
     icon: Users
   },
+   {
+  title: 'Yorumlar',
+  href: '/admin/reviews',
+  icon: MessageSquare
+},{
+  title: 'Kuponlar',
+    href: '/admin/kuponlar',
+    icon: Tag
+
+},
   {
     title: 'Ayarlar',
     href: '/admin/ayarlar',
     icon: Settings
   },
-  {
-  title: 'Yorumlar',
-  href: '/admin/reviews',
-  icon: MessageSquare
-}
+
+ 
 
 ]
 

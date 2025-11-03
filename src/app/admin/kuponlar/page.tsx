@@ -446,15 +446,13 @@ export default function AdminCouponsPage() {
                     <div>{formatDate(coupon.endDate)}</div>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
+                    <Badge 
+                      variant={coupon.isActive ? 'default' : 'secondary'}
+                      className="cursor-pointer"
                       onClick={() => toggleActive(coupon)}
                     >
-                      <Badge variant={coupon.isActive ? 'default' : 'secondary'}>
-                        {coupon.isActive ? 'Aktif' : 'Pasif'}
-                      </Badge>
-                    </Button>
+                      {coupon.isActive ? '✓ Aktif' : '✗ Pasif'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">

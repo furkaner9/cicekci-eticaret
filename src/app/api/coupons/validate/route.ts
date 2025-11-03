@@ -18,6 +18,9 @@ export async function POST(req: NextRequest) {
       where: { code: code.toUpperCase() },
     });
 
+    console.log('🔍 Kupon arama:', code.toUpperCase());
+    console.log('📦 Bulunan kupon:', coupon);
+
     if (!coupon) {
       return NextResponse.json(
         { error: 'Geçersiz kupon kodu' },
@@ -26,6 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Aktif mi?
+    console.log('✅ Kupon aktif mi?:', coupon.isActive);
     if (!coupon.isActive) {
       return NextResponse.json(
         { error: 'Bu kupon artık geçerli değil' },

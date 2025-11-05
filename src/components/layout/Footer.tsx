@@ -33,7 +33,7 @@ export default function Footer() {
               <li><Link href="/hakkimizda" className="hover:text-pink-400">Hakkımızda</Link></li>
               <li><Link href="/urun" className="hover:text-pink-400">Ürünlerimiz</Link></li>
               <li><Link href="/kampanyalar" className="hover:text-pink-400">Kampanyalar</Link></li>
-              <li><Link href="/blog" className="hover:text-pink-400">Blog</Link></li>
+            
               <li><Link href="/iletisim" className="hover:text-pink-400">İletişim</Link></li>
             </ul>
           </div>
@@ -45,7 +45,7 @@ export default function Footer() {
               <li><Link href="/sss" className="hover:text-pink-400">Sık Sorulan Sorular</Link></li>
               <li><Link href="/teslimat" className="hover:text-pink-400">Teslimat Bilgileri</Link></li>
               <li><Link href="/iade" className="hover:text-pink-400">İptal ve İade</Link></li>
-              <li><Link href="/gizlilik" className="hover:text-pink-400">Gizlilik Politikası</Link></li>
+              <li><Link href="/gizlilik-politikasi" className="hover:text-pink-400">Gizlilik Politikası</Link></li>
               <li><Link href="/kullanim-kosullari" className="hover:text-pink-400">Kullanım Koşulları</Link></li>
             </ul>
           </div>

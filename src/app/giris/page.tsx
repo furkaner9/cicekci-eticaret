@@ -1,141 +1,173 @@
+// app/login/page.tsx
 'use client'
 
 import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { loginSchema, type LoginInput } from '@/lib/validations/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { Loader2, LogIn } from 'lucide-react'
+import { Eye, EyeOff, LogIn } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/'
+  
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
 
+  const onSubmit = async (data: LoginInput) => {
     try {
+      setLoading(true)
+
       const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false
+        email: data.email,
+        password: data.password,
+        redirect: false,
       })
 
       if (result?.error) {
-        toast.error('Hata', {
-          description: 'E-posta veya şifre hatalı.',
+        toast.error('Giriş Başarısız', {
+          description: 'E-posta veya şifre hatalı',
         })
         return
       }
 
-      toast.success('Giriş Başarılı!', {
-        description: 'Hoş geldiniz!',
+      toast.success('Hoş geldiniz!', {
+        description: 'Başarıyla giriş yaptınız',
       })
 
-      router.push('/')
+      router.push(redirect)
       router.refresh()
-
     } catch (error) {
-      toast.error('Hata', {
-        description: 'Giriş yapılırken bir hata oluştu.',
+      toast.error('Bir hata oluştu', {
+        description: 'Lütfen tekrar deneyin',
       })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
   return (
     <div className="container mx-auto px-4 py-16">
       <Card className="max-w-md mx-auto">
-        <CardHeader>
+        <CardHeader className="text-center">
+          <div className="text-5xl mb-4">🌸</div>
           <CardTitle className="text-2xl">Giriş Yap</CardTitle>
           <CardDescription>
-            Hesabınıza giriş yaparak alışverişe devam edin
+            Hesabınıza giriş yapın ve alışverişe devam edin
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* E-posta */}
             <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
+              <Label htmlFor="email">E-posta *</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="ornek@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                {...register('email')}
+                className={errors.email ? 'border-red-500' : ''}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
 
+            {/* Şifre */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Şifre</Label>
-                <Link 
-                  href="/sifremi-unuttum" 
-                  className="text-sm text-pink-600 hover:underline"
+              <Label htmlFor="password">Şifre *</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  {...register('password')}
+                  className={errors.password ? 'border-red-500' : ''}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  Şifremi unuttum
-                </Link>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password.message}</p>
+              )}
             </div>
 
+            {/* Şifremi Unuttum */}
+            <div className="flex justify-end">
+              <Link
+                href="/sifremi-unuttum"
+                className="text-sm text-pink-600 hover:underline"
+              >
+                Şifremi Unuttum
+              </Link>
+            </div>
+
+            {/* Giriş Butonu */}
             <Button
               type="submit"
-              disabled={isLoading}
               className="w-full bg-pink-600 hover:bg-pink-700"
+              size="lg"
+              disabled={loading}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Giriş yapılıyor...
-                </>
+              {loading ? (
+                'Giriş yapılıyor...'
               ) : (
                 <>
-                  <LogIn className="mr-2 h-4 w-4" />
+                  <LogIn className="mr-2" size={18} />
                   Giriş Yap
                 </>
               )}
             </Button>
-          </form>
 
-          <div className="mt-6">
+            {/* Ayırıcı */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <Separator />
+                <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  veya
-                </span>
+                <span className="bg-white px-2 text-gray-500">veya</span>
               </div>
             </div>
 
-            <div className="mt-6 text-center text-sm">
-              <span className="text-muted-foreground">Hesabınız yok mu? </span>
-              <Link 
-                href="/kayit" 
-                className="text-pink-600 hover:underline font-medium"
-              >
-                Kayıt Ol
-              </Link>
+            {/* Kayıt Ol Linki */}
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Hesabınız yok mu?{' '}
+                <Link
+                  href="/kayit"
+                  className="text-pink-600 hover:underline font-medium"
+                >
+                  Kayıt Olun
+                </Link>
+              </p>
             </div>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>
